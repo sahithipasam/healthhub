@@ -52,18 +52,16 @@ export function AppProvider({ children }) {
 
   const logout = () => {
     setAuth({ isAuthenticated: false, role: null, username: '' })
+
+    if (typeof window !== 'undefined') {
+      window.localStorage.removeItem('token')
+    }
   }
 
-  const registerUser = ({ role, username, password, adminContact }) => {
+  const registerUser = ({ role, username, password }) => {
     const normalizedUsername = username.trim().toLowerCase()
     if (!normalizedUsername || !password) {
       return { ok: false, message: 'Username and password are required.' }
-    }
-
-    if (role === 'admin') {
-      if (!(adminContact || '').trim()) {
-        return { ok: false, message: 'Admin phone number is required.' }
-      }
     }
 
     const duplicate = users.some(
@@ -81,7 +79,6 @@ export function AppProvider({ children }) {
         role,
         username: username.trim(),
         password,
-        ...(role === 'admin' ? { adminContact: adminContact.trim() } : {}),
       },
     ]
     setUsers(nextUsers)

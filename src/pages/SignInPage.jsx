@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { loginUser } from '../api/auth'
 
 const createCaptcha = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
@@ -23,6 +24,23 @@ export default function SignInPage() {
   const [otpHint, setOtpHint] = useState('')
   const [error, setError] = useState('')
 
+  const handleLogin = async () => {
+    try {
+      const res = await loginUser({
+        email: form.username,
+        password: form.password,
+      })
+
+      const token = res.data.token
+
+      localStorage.setItem('token', token)
+
+      console.log('Login success')
+    } catch (err) {
+      console.error(err.response?.data || err.message)
+    }
+  }
+
   if (auth.isAuthenticated && auth.role === 'student') {
     return <Navigate to="/student" replace />
   }
@@ -43,7 +61,7 @@ export default function SignInPage() {
     }
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     setError('')
 
@@ -66,6 +84,7 @@ export default function SignInPage() {
         return
       }
 
+      await handleLogin()
       login(form.role, form.username.trim())
       navigate('/admin', { replace: true })
       return
@@ -94,6 +113,7 @@ export default function SignInPage() {
       return
     }
 
+    await handleLogin()
     login(form.role, form.username.trim())
     navigate(form.role === 'admin' ? '/admin' : '/student', { replace: true })
   }

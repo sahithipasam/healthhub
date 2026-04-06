@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react'
 import { Navigate, useNavigate, useSearchParams } from 'react-router-dom'
 import EventForm from '../../components/EventForm'
 import TopNav from '../../components/TopNav'
+import { getAdminData } from '../../api/admin'
 import { useApp } from '../../context/AppContext'
 
 const tabs = [
@@ -227,6 +228,19 @@ export default function AdminDashboard() {
   }
 
   const activeTab = params.get('tab') || 'dashboard'
+
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const res = await getAdminData()
+        console.log(res.data)
+      } catch (err) {
+        console.error(err.response?.data)
+      }
+    }
+
+    fetchData()
+  }, [])
 
   useEffect(() => {
     if (!tabs.find((tab) => tab.key === activeTab)) {

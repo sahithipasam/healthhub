@@ -5,7 +5,7 @@ import { useApp } from '../context/AppContext'
 export default function AdminSignUpPage() {
   const { auth, registerUser } = useApp()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ username: '', password: '', confirmPassword: '', adminContact: '' })
+  const [form, setForm] = useState({ username: '', password: '', confirmPassword: '' })
   const [error, setError] = useState('')
 
   if (auth.isAuthenticated && auth.role === 'student') {
@@ -44,7 +44,6 @@ export default function AdminSignUpPage() {
       role: 'admin',
       username: form.username.trim(),
       password: form.password,
-        adminContact: form.adminContact,
     })
 
     if (!result.ok) {
@@ -63,7 +62,7 @@ export default function AdminSignUpPage() {
       >
         <div className="space-y-1">
           <h2 className="text-2xl font-black text-slate-900">Admin Sign Up</h2>
-            <p className="text-sm text-slate-900/70">Create a new admin account with a phone number for OTP login.</p>
+          <p className="text-sm text-slate-900/70">Create a new admin account.</p>
         </div>
 
         <input
@@ -89,16 +88,6 @@ export default function AdminSignUpPage() {
           value={form.confirmPassword}
           onChange={handleChange}
           placeholder="Confirm Password"
-          className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
-        />
-
-        <label className="block text-sm font-semibold text-slate-900">Admin phone number (for OTP)</label>
-        <input
-            type="tel"
-            name="adminContact"
-            value={form.adminContact}
-          onChange={handleChange}
-            placeholder="Phone number"
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         />
 
