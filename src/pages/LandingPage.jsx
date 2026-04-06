@@ -89,7 +89,7 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mt-8">
+        <section id="about" className="mt-8">
           <div className="mb-4 text-center">
             <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-700">Why choose us</p>
             <h3 className="mt-2 text-3xl font-black">Built for student well-being</h3>
@@ -108,7 +108,10 @@ export default function LandingPage() {
           </div>
         </section>
 
-        <section className="mt-8 rounded-3xl border border-emerald-200 bg-gradient-to-r from-cyan-700 to-emerald-600 p-7 text-white shadow-lg shadow-cyan-300/30">
+        <section
+          id="support"
+          className="mt-8 rounded-3xl border border-emerald-200 bg-gradient-to-r from-cyan-700 to-emerald-600 p-7 text-white shadow-lg shadow-cyan-300/30"
+        >
           <p className="text-sm font-semibold uppercase tracking-[0.2em] text-cyan-50/90">Ready to begin</p>
           <h3 className="mt-2 text-3xl font-black">Start your wellness journey with Health Hub</h3>
           <p className="mt-3 max-w-2xl text-cyan-50/90">
@@ -122,18 +125,10 @@ export default function LandingPage() {
           </Link>
         </section>
 
-        <footer className="mt-8 grid gap-4 rounded-3xl border border-sky-200 bg-white/85 p-6 text-sm text-slate-900/85 md:grid-cols-3">
+        <footer id="resources" className="mt-8 grid gap-4 rounded-3xl border border-sky-200 bg-white/85 p-6 text-sm text-slate-900/85 md:grid-cols-2">
           <div>
             <p className="font-black text-slate-900">Health Hub</p>
             <p className="mt-2">Supporting student health and well-being across campus.</p>
-          </div>
-          <div>
-            <p className="font-semibold uppercase tracking-[0.16em] text-cyan-700">Quick Links</p>
-            <ul className="mt-2 space-y-1">
-              <li>About</li>
-              <li>Resources</li>
-              <li>Support</li>
-            </ul>
           </div>
           <div>
             <p className="font-semibold uppercase tracking-[0.16em] text-cyan-700">Emergency</p>

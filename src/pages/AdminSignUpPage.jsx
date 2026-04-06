@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { ADMIN_SECURITY_PROMPT } from '../data/mockData'
 import { useApp } from '../context/AppContext'
 
 export default function AdminSignUpPage() {
@@ -64,7 +63,7 @@ export default function AdminSignUpPage() {
       >
         <div className="space-y-1">
           <h2 className="text-2xl font-black text-slate-900">Admin Sign Up</h2>
-            <p className="text-sm text-slate-900/70">Create a new admin account with an admin contact for OTP login.</p>
+            <p className="text-sm text-slate-900/70">Create a new admin account with a phone number for OTP login.</p>
         </div>
 
         <input
@@ -93,13 +92,13 @@ export default function AdminSignUpPage() {
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         />
 
-        <label className="block text-sm font-semibold text-slate-900">{ADMIN_SECURITY_PROMPT}</label>
+        <label className="block text-sm font-semibold text-slate-900">Admin phone number (for OTP)</label>
         <input
-            type="text"
+            type="tel"
             name="adminContact"
             value={form.adminContact}
           onChange={handleChange}
-            placeholder="Admin email/contact"
+            placeholder="Phone number"
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         />
 

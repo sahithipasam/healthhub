@@ -175,9 +175,11 @@ export default function SignInPage() {
           </p>
         )}
 
-        <p className="text-sm text-slate-900/80">
-          First time here? <Link to="/signup" className="font-semibold text-cyan-800 underline">Create account</Link>
-        </p>
+        {form.role === 'student' && (
+          <p className="text-sm text-slate-900/80">
+            First time here? <Link to="/signup" className="font-semibold text-cyan-800 underline">Create account</Link>
+          </p>
+        )}
 
         <p className="text-sm text-slate-900/80">
           Return to <Link to="/" className="font-semibold text-cyan-800 underline">Home</Link>

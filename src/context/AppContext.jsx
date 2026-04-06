@@ -62,7 +62,7 @@ export function AppProvider({ children }) {
 
     if (role === 'admin') {
       if (!(adminContact || '').trim()) {
-        return { ok: false, message: 'Admin email or contact is required.' }
+        return { ok: false, message: 'Admin phone number is required.' }
       }
     }
 

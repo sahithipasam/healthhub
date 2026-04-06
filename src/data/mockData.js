@@ -1,4 +1,4 @@
-export const ADMIN_SECURITY_PROMPT = 'Admin contact (email/phone for OTP)'
+export const ADMIN_SECURITY_PROMPT = 'Admin phone number (for OTP)'
 
 export const createId = () => {
   if (typeof crypto !== 'undefined' && crypto.randomUUID) {
