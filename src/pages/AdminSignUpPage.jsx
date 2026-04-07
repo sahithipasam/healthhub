@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
+import { registerUser } from '../api/auth'
 
 export default function AdminSignUpPage() {
-  const { auth, registerUser } = useApp()
+  const { auth } = useApp()
   const navigate = useNavigate()
-  const [form, setForm] = useState({ username: '', password: '', confirmPassword: '' })
+  const [form, setForm] = useState({ name: '', email: '', password: '', confirmPassword: '' })
   const [error, setError] = useState('')
 
   if (auth.isAuthenticated && auth.role === 'student') {
@@ -21,12 +22,17 @@ export default function AdminSignUpPage() {
     setForm((prev) => ({ ...prev, [name]: value }))
   }
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault()
     setError('')
 
-    if (!form.username.trim()) {
-      setError('Username is required.')
+    if (!form.name.trim()) {
+      setError('Name is required.')
+      return
+    }
+
+    if (!form.email.trim()) {
+      setError('Email is required.')
       return
     }
 
@@ -37,21 +43,26 @@ export default function AdminSignUpPage() {
 
     if (form.password !== form.confirmPassword) {
       setError('Passwords do not match.')
-        return
-    }
-
-    const result = registerUser({
-      role: 'admin',
-      username: form.username.trim(),
-      password: form.password,
-    })
-
-    if (!result.ok) {
-      setError(result.message)
       return
     }
 
-    navigate('/signin', { replace: true })
+    try {
+      await registerUser({
+        name: form.name.trim(),
+        email: form.email.trim(),
+        password: form.password,
+        role: 'ADMIN',
+      })
+
+      navigate('/signin', { replace: true })
+    } catch (err) {
+      if (err.message === 'Network Error') {
+        setError('Cannot reach auth server. Check API URL/CORS or start backend on port 2026.')
+        return
+      }
+
+      setError(err.response?.data?.message || err.message || 'Sign up failed.')
+    }
   }
 
   return (
@@ -66,10 +77,18 @@ export default function AdminSignUpPage() {
         </div>
 
         <input
-          name="username"
-          value={form.username}
+          name="name"
+          value={form.name}
           onChange={handleChange}
-          placeholder="Admin username"
+          placeholder="Full Name"
+          className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
+        />
+
+        <input
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Email"
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         />
 

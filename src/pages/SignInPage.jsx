@@ -15,31 +15,12 @@ const createCaptcha = () => {
 }
 
 export default function SignInPage() {
-  const { auth, login, authenticateUser, requestAdminOtp, verifyAdminOtp } = useApp()
+  const { auth, login } = useApp()
   const navigate = useNavigate()
   const initialCaptcha = useMemo(() => createCaptcha(), [])
   const [captcha, setCaptcha] = useState(initialCaptcha)
-  const [form, setForm] = useState({ role: 'student', username: '', password: '', adminOtp: '', captcha: '' })
-  const [otpStep, setOtpStep] = useState(false)
-  const [otpHint, setOtpHint] = useState('')
+  const [form, setForm] = useState({ role: 'student', username: '', password: '', captcha: '' })
   const [error, setError] = useState('')
-
-  const handleLogin = async () => {
-    try {
-      const res = await loginUser({
-        email: form.username,
-        password: form.password,
-      })
-
-      const token = res.data.token
-
-      localStorage.setItem('token', token)
-
-      console.log('Login success')
-    } catch (err) {
-      console.error(err.response?.data || err.message)
-    }
-  }
 
   if (auth.isAuthenticated && auth.role === 'student') {
     return <Navigate to="/student" replace />
@@ -52,13 +33,6 @@ export default function SignInPage() {
   const handleChange = (event) => {
     const { name, value } = event.target
     setForm((prev) => ({ ...prev, [name]: value }))
-
-    if (name === 'role') {
-      setOtpStep(false)
-      setOtpHint('')
-      setError('')
-      setForm((prev) => ({ ...prev, adminOtp: '' }))
-    }
   }
 
   const handleSubmit = async (event) => {
@@ -70,6 +44,11 @@ export default function SignInPage() {
       return
     }
 
+    if (!form.password) {
+      setError('Password is required.')
+      return
+    }
+
     if (form.captcha.trim().toLowerCase() !== captcha.answer) {
       setError('Invalid CAPTCHA text.')
       setCaptcha(createCaptcha())
@@ -77,45 +56,30 @@ export default function SignInPage() {
       return
     }
 
-    if (form.role === 'admin' && otpStep) {
-      const otpResult = verifyAdminOtp({ username: form.username, code: form.adminOtp })
-      if (!otpResult.ok) {
-        setError(otpResult.message)
+    try {
+      const credential = form.username.trim()
+      const res = await loginUser({
+        email: credential,
+        username: credential,
+        password: form.password,
+        role: form.role,
+      })
+
+      const token = res.data?.token
+      if (token) {
+        localStorage.setItem('token', token)
+      }
+
+      login(form.role, credential)
+      navigate(form.role === 'admin' ? '/admin' : '/student', { replace: true })
+    } catch (err) {
+      if (err.message === 'Network Error') {
+        setError('Cannot reach auth server. Check API URL/CORS or start backend on port 2026.')
         return
       }
 
-      await handleLogin()
-      login(form.role, form.username.trim())
-      navigate('/admin', { replace: true })
-      return
+      setError(err.response?.data?.message || 'Incorrect username or password.')
     }
-
-    const authResult = authenticateUser({
-      role: form.role,
-      username: form.username,
-      password: form.password,
-    })
-
-    if (!authResult.ok) {
-      setError(authResult.message)
-      return
-    }
-
-    if (form.role === 'admin' && authResult.requiresOtp) {
-      const otpResponse = requestAdminOtp(form.username)
-      if (!otpResponse.ok) {
-        setError(otpResponse.message)
-        return
-      }
-
-      setOtpStep(true)
-      setOtpHint(`OTP sent to ${authResult.adminContact}. Demo code: ${otpResponse.code}`)
-      return
-    }
-
-    await handleLogin()
-    login(form.role, form.username.trim())
-    navigate(form.role === 'admin' ? '/admin' : '/student', { replace: true })
   }
 
   return (
@@ -156,21 +120,6 @@ export default function SignInPage() {
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         />
 
-        {form.role === 'admin' && otpStep && (
-          <input
-            type="password"
-            name="adminOtp"
-            value={form.adminOtp}
-            onChange={handleChange}
-            placeholder="Enter one-time OTP"
-            className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
-          />
-        )}
-
-        {form.role === 'admin' && otpStep && otpHint && (
-          <p className="rounded-lg bg-sky-100 px-3 py-2 text-sm text-cyan-800">{otpHint}</p>
-        )}
-
         <label className="block text-sm font-semibold text-slate-900">CAPTCHA text: {captcha.question}</label>
         <input
           name="captcha"
@@ -186,7 +135,7 @@ export default function SignInPage() {
           type="submit"
           className="w-full rounded-lg bg-cyan-700 px-4 py-2 font-semibold text-white transition hover:bg-cyan-800"
         >
-          {form.role === 'admin' && otpStep ? 'Verify OTP' : 'Continue'}
+          Continue
         </button>
 
         {form.role === 'admin' && (

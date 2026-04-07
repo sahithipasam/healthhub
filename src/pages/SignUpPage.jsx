@@ -1,58 +1,78 @@
-import { useState } from 'react'
-import { Link, Navigate, useNavigate } from 'react-router-dom'
-import { useApp } from '../context/AppContext'
+import { useState } from "react";
+import { Link, Navigate, useNavigate } from "react-router-dom";
+import { useApp } from "../context/AppContext";
+import { registerUser } from "../api/auth";
 
 export default function SignUpPage() {
-  const { auth, registerUser } = useApp()
-  const navigate = useNavigate()
-  const [form, setForm] = useState({ username: '', password: '', confirmPassword: '' })
-  const [error, setError] = useState('')
+  const { auth } = useApp();
+  const navigate = useNavigate();
 
-  if (auth.isAuthenticated && auth.role === 'student') {
-    return <Navigate to="/student" replace />
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+    confirmPassword: "",
+  });
+
+  const [error, setError] = useState("");
+
+  // 🔹 Redirect if already logged in
+  if (auth.isAuthenticated && auth.role === "student") {
+    return <Navigate to="/student" replace />;
   }
 
-  if (auth.isAuthenticated && auth.role === 'admin') {
-    return <Navigate to="/admin" replace />
+  if (auth.isAuthenticated && auth.role === "admin") {
+    return <Navigate to="/admin" replace />;
   }
 
+  // 🔹 Handle input change
   const handleChange = (event) => {
-    const { name, value } = event.target
-    setForm((prev) => ({ ...prev, [name]: value }))
-  }
+    const { name, value } = event.target;
+    setForm((prev) => ({ ...prev, [name]: value }));
+  };
 
-  const handleSubmit = (event) => {
-    event.preventDefault()
-    setError('')
+  // 🔹 Handle submit
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setError("");
 
-    if (!form.username.trim()) {
-      setError('Username is required.')
-      return
+    if (!form.name.trim()) {
+      setError("Name is required.");
+      return;
+    }
+
+    if (!form.email.trim()) {
+      setError("Email is required.");
+      return;
     }
 
     if (form.password.length < 4) {
-      setError('Password must be at least 4 characters.')
-      return
+      setError("Password must be at least 4 characters.");
+      return;
     }
 
     if (form.password !== form.confirmPassword) {
-      setError('Passwords do not match.')
-      return
+      setError("Passwords do not match.");
+      return;
     }
 
-    const result = registerUser({
-      role: 'student',
-      username: form.username.trim(),
-      password: form.password,
-    })
+    try {
+      await registerUser({
+        email: form.email.trim(),
+        password: form.password,
+      });
 
-    if (!result.ok) {
-      setError(result.message)
-      return
+      navigate("/signin", { replace: true });
+
+    } catch (err) {
+      if (err.message === "Network Error") {
+        setError("Cannot reach auth server. Check API URL/CORS or start backend on port 2026.");
+        return;
+      }
+
+      setError(err.response?.data?.message || err.message || "Sign up failed.");
     }
-
-    navigate('/signin', { replace: true })
-  }
+  };
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-sky-100 to-emerald-100 px-4">
@@ -62,17 +82,30 @@ export default function SignUpPage() {
       >
         <div className="space-y-1">
           <h2 className="text-2xl font-black text-slate-900">Sign Up</h2>
-          <p className="text-sm text-slate-900/70">Create your student Health Hub account to continue.</p>
+          <p className="text-sm text-slate-900/70">
+            Create your Health Hub account to continue.
+          </p>
         </div>
 
+        {/* Name */}
         <input
-          name="username"
-          value={form.username}
+          name="name"
+          value={form.name}
           onChange={handleChange}
-          placeholder="Username"
+          placeholder="Full Name"
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         />
 
+        {/* Email */}
+        <input
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Email"
+          className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
+        />
+
+        {/* Password */}
         <input
           type="password"
           name="password"
@@ -82,6 +115,7 @@ export default function SignUpPage() {
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         />
 
+        {/* Confirm Password */}
         <input
           type="password"
           name="confirmPassword"
@@ -91,8 +125,14 @@ export default function SignUpPage() {
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         />
 
-        {error && <p className="rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700">{error}</p>}
+        {/* Error */}
+        {error && (
+          <p className="rounded-lg bg-red-100 px-3 py-2 text-sm font-medium text-red-700">
+            {error}
+          </p>
+        )}
 
+        {/* Submit */}
         <button
           type="submit"
           className="w-full rounded-lg bg-cyan-700 px-4 py-2 font-semibold text-white transition hover:bg-cyan-800"
@@ -100,10 +140,14 @@ export default function SignUpPage() {
           Create Account
         </button>
 
+        {/* Login link */}
         <p className="text-sm text-slate-900/80">
-          Already have an account? <Link to="/signin" className="font-semibold text-cyan-800 underline">Sign In</Link>
+          Already have an account?{" "}
+          <Link to="/signin" className="font-semibold text-cyan-800 underline">
+            Sign In
+          </Link>
         </p>
       </form>
     </div>
-  )
+  );
 }
