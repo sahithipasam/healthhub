@@ -7,10 +7,14 @@ const getApiErrorMessage = (err) => {
   const data = err.response?.data
 
   if (typeof data === 'string' && data.trim()) {
+    if (data.trim().toLowerCase() === 'user not found') {
+      return 'User not found. Sign in with the registered email address used during signup.'
+    }
+
     return data
   }
 
-  return data?.message || err.message || 'Incorrect username or password.'
+  return data?.message || err.message || 'Incorrect email or password.'
 }
 
 const createCaptcha = () => {
@@ -29,7 +33,7 @@ export default function SignInPage() {
   const navigate = useNavigate()
   const initialCaptcha = useMemo(() => createCaptcha(), [])
   const [captcha, setCaptcha] = useState(initialCaptcha)
-  const [form, setForm] = useState({ role: 'STUDENT', username: '', password: '', captcha: '' })
+  const [form, setForm] = useState({ role: 'STUDENT', name: '', email: '', password: '', captcha: '' })
   const [error, setError] = useState('')
 
   if (auth.isAuthenticated && auth.role?.toLowerCase() === 'student') {
@@ -49,8 +53,13 @@ export default function SignInPage() {
     event.preventDefault()
     setError('')
 
-    if (!form.username.trim()) {
-      setError('Username is required.')
+    if (!form.email.trim()) {
+      setError('Email is required.')
+      return
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email.trim())) {
+      setError('Enter a valid email address.')
       return
     }
 
@@ -67,7 +76,8 @@ export default function SignInPage() {
     }
 
     try {
-      const credential = form.username.trim()
+      const credential = form.email.trim()
+      const displayName = form.name.trim()
       const normalizedRole = form.role.toLowerCase()
       const res = await loginUser({
         email: credential,
@@ -79,11 +89,11 @@ export default function SignInPage() {
         localStorage.setItem('token', token)
       }
 
-      login(normalizedRole, credential)
+      login(normalizedRole, displayName || credential)
       navigate(normalizedRole === 'admin' ? '/admin' : '/student', { replace: true })
     } catch (err) {
       if (err.message === 'Network Error') {
-        setError('Cannot reach auth server. Check API URL/CORS or start backend on port 2026.')
+        setError('Cannot reach auth server. Start frontend on http://localhost:5173 and backend on port 2026.')
         return
       }
 
@@ -99,7 +109,7 @@ export default function SignInPage() {
       >
         <div className="space-y-1">
           <h2 className="text-2xl font-black text-slate-900">Sign In</h2>
-          <p className="text-sm text-slate-900/70">Enter your username and role to access Health Hub.</p>
+          <p className="text-sm text-slate-900/70">Enter your email and role to access Health Hub.</p>
         </div>
 
         <select
@@ -113,10 +123,18 @@ export default function SignInPage() {
         </select>
 
         <input
-          name="username"
-          value={form.username}
+          name="name"
+          value={form.name}
           onChange={handleChange}
-          placeholder="Username"
+          placeholder="Name"
+          className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
+        />
+
+        <input
+          name="email"
+          value={form.email}
+          onChange={handleChange}
+          placeholder="Email"
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         />
 
