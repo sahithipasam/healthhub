@@ -3,6 +3,16 @@ import { Link, Navigate, useNavigate } from 'react-router-dom'
 import { useApp } from '../context/AppContext'
 import { loginUser } from '../api/auth'
 
+const getApiErrorMessage = (err) => {
+  const data = err.response?.data
+
+  if (typeof data === 'string' && data.trim()) {
+    return data
+  }
+
+  return data?.message || err.message || 'Incorrect username or password.'
+}
+
 const createCaptcha = () => {
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'
   let text = ''
@@ -19,14 +29,14 @@ export default function SignInPage() {
   const navigate = useNavigate()
   const initialCaptcha = useMemo(() => createCaptcha(), [])
   const [captcha, setCaptcha] = useState(initialCaptcha)
-  const [form, setForm] = useState({ role: 'student', username: '', password: '', captcha: '' })
+  const [form, setForm] = useState({ role: 'STUDENT', username: '', password: '', captcha: '' })
   const [error, setError] = useState('')
 
-  if (auth.isAuthenticated && auth.role === 'student') {
+  if (auth.isAuthenticated && auth.role?.toLowerCase() === 'student') {
     return <Navigate to="/student" replace />
   }
 
-  if (auth.isAuthenticated && auth.role === 'admin') {
+  if (auth.isAuthenticated && auth.role?.toLowerCase() === 'admin') {
     return <Navigate to="/admin" replace />
   }
 
@@ -58,11 +68,10 @@ export default function SignInPage() {
 
     try {
       const credential = form.username.trim()
+      const normalizedRole = form.role.toLowerCase()
       const res = await loginUser({
         email: credential,
-        username: credential,
         password: form.password,
-        role: form.role,
       })
 
       const token = res.data?.token
@@ -70,15 +79,15 @@ export default function SignInPage() {
         localStorage.setItem('token', token)
       }
 
-      login(form.role, credential)
-      navigate(form.role === 'admin' ? '/admin' : '/student', { replace: true })
+      login(normalizedRole, credential)
+      navigate(normalizedRole === 'admin' ? '/admin' : '/student', { replace: true })
     } catch (err) {
       if (err.message === 'Network Error') {
         setError('Cannot reach auth server. Check API URL/CORS or start backend on port 2026.')
         return
       }
 
-      setError(err.response?.data?.message || 'Incorrect username or password.')
+      setError(getApiErrorMessage(err))
     }
   }
 
@@ -99,8 +108,8 @@ export default function SignInPage() {
           onChange={handleChange}
           className="w-full rounded-lg border border-sky-300 px-3 py-2 outline-none focus:border-cyan-500"
         >
-          <option value="student">Student</option>
-          <option value="admin">Admin</option>
+          <option value="ADMIN">Admin</option>
+          <option value="STUDENT">Student</option>
         </select>
 
         <input
@@ -138,13 +147,13 @@ export default function SignInPage() {
           Continue
         </button>
 
-        {form.role === 'admin' && (
+        {form.role === 'ADMIN' && (
           <p className="text-sm text-slate-900/80">
             New admin? <Link to="/admin-signup" className="font-semibold text-cyan-800 underline">Create admin account</Link>
           </p>
         )}
 
-        {form.role === 'student' && (
+        {form.role === 'STUDENT' && (
           <p className="text-sm text-slate-900/80">
             First time here? <Link to="/signup" className="font-semibold text-cyan-800 underline">Create account</Link>
           </p>

@@ -18,5 +18,8 @@ API.interceptors.request.use((req) => {
 
 export const loginUser = (data) => API.post("/auth/login", data);
 export const registerUser = (data) => API.post("/auth/register", data);
+export const requestOtp = (email) => API.post("/auth/send-otp", { email });
+export const verifyOtp = (email, otp) => API.post("/auth/verify-otp", { email, otp });
+export const resendOtp = (email) => API.post("/auth/resend-otp", { email });
 
 export default API;
