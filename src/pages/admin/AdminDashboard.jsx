@@ -180,40 +180,94 @@ function FeedbackPanel() {
 
 function SessionsPanel() {
   const { sessions, updateSession } = useApp()
-  const [messages, setMessages] = useState({})
+  const [rejectionReasons, setRejectionReasons] = useState({})
+  const [actionStatus, setActionStatus] = useState({})
+
+  const handleApprove = (sessionId) => {
+    updateSession(sessionId, 'approved', '')
+    setActionStatus((prev) => ({ ...prev, [sessionId]: 'approved' }))
+  }
+
+  const handleReject = (sessionId) => {
+    const reason = rejectionReasons[sessionId] ?? ''
+    updateSession(sessionId, 'rejected', reason.trim())
+    setActionStatus((prev) => ({ ...prev, [sessionId]: 'rejected' }))
+  }
 
   return (
     <section className="space-y-3 rounded-2xl border border-sky-200 bg-white p-4 shadow-sm">
-      {sessions.map((session) => (
-        <article key={session.id} className="rounded-xl border border-sky-200 bg-sky-50 p-3">
-          <p className="font-semibold text-slate-900">Student: {session.studentId}</p>
-          <p className="text-sm text-slate-900/80">Date: {session.date}</p>
-          <p className="text-sm text-slate-900/80">Concern: {session.concern}</p>
-          <p className="text-sm font-semibold uppercase text-cyan-700">Status: {session.status}</p>
-          <textarea
-            value={messages[session.id] ?? session.responseMessage}
-            onChange={(event) => setMessages((prev) => ({ ...prev, [session.id]: event.target.value }))}
-            placeholder="Response message"
-            className="mt-2 min-h-20 w-full rounded-lg border border-sky-300 px-3 py-2 text-sm outline-none focus:border-cyan-500"
-          />
-          <div className="mt-2 flex gap-2">
-            <button
-              type="button"
-              onClick={() => updateSession(session.id, 'approved', (messages[session.id] ?? session.responseMessage).trim())}
-              className="rounded-lg bg-emerald-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-emerald-700"
-            >
-              Approve
-            </button>
-            <button
-              type="button"
-              onClick={() => updateSession(session.id, 'rejected', (messages[session.id] ?? session.responseMessage).trim())}
-              className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700"
-            >
-              Reject
-            </button>
-          </div>
-        </article>
-      ))}
+      {sessions.map((session) => {
+        const isRejecting = actionStatus[session.id] === 'rejecting'
+        const isApproved = actionStatus[session.id] === 'approved'
+        const isRejected = actionStatus[session.id] === 'rejected'
+
+        return (
+          <article key={session.id} className="rounded-xl border border-sky-200 bg-sky-50 p-3">
+            <p className="font-semibold text-slate-900">Student: {session.studentId}</p>
+            <p className="text-sm text-slate-900/80">Date: {session.date}</p>
+            <p className="text-sm text-slate-900/80">Concern: {session.concern}</p>
+            
+            {isApproved && (
+              <p className="text-sm font-semibold uppercase text-emerald-600 mt-2">Approved</p>
+            )}
+
+            {isRejected && (
+              <>
+                <p className="text-sm font-semibold uppercase text-red-600 mt-2">Rejected</p>
+                {rejectionReasons[session.id] && (
+                  <p className="text-sm text-slate-700 mt-2">Reason: {rejectionReasons[session.id]}</p>
+                )}
+              </>
+            )}
+
+            {isRejecting && (
+              <div className="mt-3 space-y-2">
+                <textarea
+                  value={rejectionReasons[session.id] ?? ''}
+                  onChange={(event) => setRejectionReasons((prev) => ({ ...prev, [session.id]: event.target.value }))}
+                  placeholder="Write rejection reason"
+                  className="w-full rounded-lg border border-sky-300 px-3 py-2 text-sm outline-none focus:border-cyan-500 min-h-20"
+                />
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleReject(session.id)}
+                    className="rounded-lg bg-red-600 px-3 py-1.5 text-sm font-semibold text-white hover:bg-red-700"
+                  >
+                    Confirm Reject
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActionStatus((prev) => ({ ...prev, [session.id]: undefined }))}
+                    className="rounded-lg border border-sky-300 px-3 py-1.5 text-sm font-semibold text-slate-800 hover:bg-sky-50"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {!isApproved && !isRejected && !isRejecting && (
+              <div className="mt-3 flex gap-2">
+                <button
+                  type="button"
+                  onClick={() => handleApprove(session.id)}
+                  className="rounded-lg bg-emerald-600 px-4 py-2 text-sm font-semibold text-white hover:bg-emerald-700"
+                >
+                  Approve
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setActionStatus((prev) => ({ ...prev, [session.id]: 'rejecting' }))}
+                  className="rounded-lg bg-red-600 px-4 py-2 text-sm font-semibold text-white hover:bg-red-700"
+                >
+                  Reject
+                </button>
+              </div>
+            )}
+          </article>
+        )
+      })}
     </section>
   )
 }
